@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String?   @unique
+  name          String?
+  image         String?
+  githubId      String?   @unique
+  accessToken   String?   // GitHub OAuth token
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  reviews       Review[]
+  prompts       Prompt[]
+}
+
+model Review {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  repoUrl       String
+  repoOwner     String
+  repoName      String
+  branch        String    @default("main")
+  reviewPrompt  String?   // Custom review instructions
+  llmResponse   String    @db.Text
+  modelUsed     String
+  createdAt     DateTime  @default(now())
+  prompts       Prompt[]
+}
+
+model Prompt {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  reviewId      String?
+  review        Review?   @relation(fields: [reviewId], references: [id])
+  userInput     String    @db.Text
+  llmResponse   String    @db.Text
+  changesMade   Json?     // Files changed, diff
+  prUrl         String?
+  commitSha     String?
+  createdAt     DateTime  @default(now())
+}
